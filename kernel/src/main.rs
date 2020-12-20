@@ -13,8 +13,6 @@
 		   const_raw_ptr_to_usize_cast,
 		   lang_items)]
 
-#[lang = "eh_personality"] extern fn eh_personality() {}
-
 // #[macro_use]
 extern crate alloc;
 // This is experimental and requires alloc_prelude as a feature
@@ -51,22 +49,6 @@ macro_rules! println
 // / LANGUAGE STRUCTURES / FUNCTIONS
 // ///////////////////////////////////
 
-#[panic_handler]
-fn panic(info: &core::panic::PanicInfo) -> ! {
-	print!("Aborting: ");
-	if let Some(p) = info.location() {
-		println!(
-		         "line {}, file {}: {}",
-		         p.line(),
-		         p.file(),
-		         info.message().unwrap()
-		);
-	}
-	else {
-		println!("no information available.");
-	}
-	abort();
-}
 #[no_mangle]
 extern "C" fn abort() -> ! {
 	loop {
