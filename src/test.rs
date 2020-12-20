@@ -1,6 +1,7 @@
 // test.rs
 use crate::fs::MinixFileSystem;
-use crate::syscall;
+use plaidsys::syscall;
+
 /// Test block will load raw binaries into memory to execute them. This function
 /// will load ELF files and try to execute them.
 pub fn test() {

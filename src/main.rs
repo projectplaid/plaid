@@ -20,6 +20,8 @@ extern crate alloc;
 // This is experimental and requires alloc_prelude as a feature
 // use alloc::prelude::v1::*;
 
+extern crate plaidsys;
+
 // ///////////////////////////////////
 // / RUST MACROS
 // ///////////////////////////////////

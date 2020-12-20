@@ -12,7 +12,9 @@ use crate::{cpu::{get_mtime,
                    unmap,
 				   zalloc,
 				   Table},
-            syscall::{syscall_exit, syscall_yield}};
+};
+
+use plaidsys::syscall::{syscall_exit, syscall_yield};
 use alloc::{string::String, collections::{vec_deque::VecDeque, BTreeMap}};
 use core::ptr::null_mut;
 use crate::lock::Mutex;

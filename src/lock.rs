@@ -3,7 +3,7 @@
 // Stephen Marz
 // 26 Apr 2020
 
-use crate::syscall::syscall_sleep;
+use plaidsys::syscall::syscall_sleep;
 
 pub const DEFAULT_LOCK_SLEEP: usize = 10000;
 #[repr(u32)]

@@ -6,8 +6,9 @@
 use crate::{
     cpu::Registers,
     process::{add_kernel_process_args, get_by_pid, set_running, set_waiting},
-    syscall::syscall_block_read,
 };
+
+use plaidsys::syscall::syscall_block_read;
 
 use crate::{buffer::Buffer, cpu::memcpy};
 use alloc::{boxed::Box, collections::BTreeMap, string::String};
