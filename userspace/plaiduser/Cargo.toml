@@ -1,10 +1,11 @@
 [package]
-name = "plaidsys"
+name = "plaiduser"
 version = "0.1.0"
-authors = ["Robert Roland <rob.roland@outlook.com>"]
+authors = ["rroland"]
 edition = "2018"
 
 [lib]
 #crate-type = ["rlib", "staticlib"]
 
 [dependencies]
+plaidsys = { path = "../plaidsys" }
