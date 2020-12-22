@@ -9,3 +9,6 @@ edition = "2018"
 
 [dependencies]
 plaidsys = { path = "../plaidsys" }
+
+[dependencies.ralloc]
+path = "../../thirdparty/ralloc"

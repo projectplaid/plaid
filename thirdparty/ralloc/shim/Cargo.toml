@@ -1,0 +1,16 @@
+[package]
+name = "ralloc_shim"
+version = "0.1.1"
+authors = ["Ticki", "Jeremy Soller <jackpot51@gmail.com>"]
+
+[profile.release]
+panic = "abort"
+opt-level = 3
+debug = false
+rpath = false
+lto = true
+debug-assertions = false
+codegen-units = 1
+
+[dependencies]
+plaidsys = { path = "../../../userspace/plaidsys" }
