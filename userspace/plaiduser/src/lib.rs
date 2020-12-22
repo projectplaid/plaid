@@ -6,12 +6,21 @@
     llvm_asm,
     global_asm,
     const_raw_ptr_to_usize_cast,
-    lang_items
+    lang_items,
+    default_alloc_error_handler
 )]
 
-use core::intrinsics::abort;
+// pub extern crate alloc;
 
-extern crate plaidsys;
+// pub extern crate ralloc;
+
+// #[global_allocator]
+// static ALLOCATOR: ralloc::Allocator = ralloc::Allocator;
+
+// pub extern crate plaidsys;
+
+// use alloc::string::String;
+use core::intrinsics::abort;
 
 #[lang = "eh_personality"]
 extern "C" fn eh_personality() {}
@@ -23,7 +32,11 @@ extern "C" fn eh_personality() {}
 macro_rules! print {
     ($($args:tt)+) => {{
         // use core::fmt::Write;
-        // let _ = write!(crate::uart::Uart::new(0x1000_0000), $($args)+);
+
+        // let mut s = String::new();
+        // let _ = write!(&mut s, $($args)+);
+
+        // plaidsys::syscall::syscall_write(1, s.as_ptr(), s.len());
     }};
 }
 #[macro_export]

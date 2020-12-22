@@ -1,9 +1,14 @@
 #![no_std]
 #![no_main]
-#![feature(const_raw_ptr_to_usize_cast, global_asm)]
+#![feature(default_alloc_error_handler, const_raw_ptr_to_usize_cast, global_asm)]
+
+// use alloc::string::String;
+
+// extern crate alloc;
 
 #[macro_use]
 extern crate plaiduser;
+extern crate plaidsys;
 
 global_asm!(include_str!("asm/start.S"));
 

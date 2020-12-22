@@ -3,9 +3,9 @@
 // Stephen Marz
 // 4 June 2020
 
-use alloc::collections::VecDeque;
 use crate::lock::Mutex;
-use crate::process::{get_by_pid, set_running};
+use crate::process::set_running;
+use alloc::collections::VecDeque;
 
 pub static mut IN_BUFFER: Option<VecDeque<u8>> = None;
 pub static mut OUT_BUFFER: Option<VecDeque<u8>> = None;
