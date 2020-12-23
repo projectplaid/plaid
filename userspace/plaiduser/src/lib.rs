@@ -10,17 +10,23 @@
     default_alloc_error_handler
 )]
 
-// pub extern crate alloc;
+pub extern crate alloc;
 
-// pub extern crate ralloc;
+pub mod bump;
 
-// #[global_allocator]
-// static ALLOCATOR: ralloc::Allocator = ralloc::Allocator;
+use bump::{BumpAllocator, Locked};
 
-// pub extern crate plaidsys;
+#[global_allocator]
+static ALLOCATOR: Locked<BumpAllocator> = Locked::new(BumpAllocator::new());
 
-// use alloc::string::String;
-use core::intrinsics::abort;
+#[no_mangle]
+extern "C" fn user_init() {
+    unsafe {
+        ALLOCATOR.lock().init();
+    }
+}
+
+pub extern crate plaidsys;
 
 #[lang = "eh_personality"]
 extern "C" fn eh_personality() {}
@@ -31,12 +37,15 @@ extern "C" fn eh_personality() {}
 #[macro_export]
 macro_rules! print {
     ($($args:tt)+) => {{
-        // use core::fmt::Write;
+        use alloc::string::String;
+        use core::fmt::Write;
 
-        // let mut s = String::new();
-        // let _ = write!(&mut s, $($args)+);
+        let mut s = String::new();
 
-        // plaidsys::syscall::syscall_write(1, s.as_ptr(), s.len());
+        let _ = write!(&mut s, $($args)+);
+        plaidsys::syscall::do_make_syscall(64, 0, 0, 0, 0, 0, 0);
+
+        plaidsys::syscall::syscall_write(1, s.as_ptr(), s.len());
     }};
 }
 #[macro_export]
@@ -56,6 +65,15 @@ macro_rules! println
 // ///////////////////////////////////
 // / LANGUAGE STRUCTURES / FUNCTIONS
 // ///////////////////////////////////
+
+#[no_mangle]
+extern "C" fn abort() -> ! {
+    loop {
+        unsafe {
+            llvm_asm!("wfi"::::"volatile");
+        }
+    }
+}
 
 #[panic_handler]
 fn panic(info: &core::panic::PanicInfo) -> ! {

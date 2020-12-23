@@ -5,10 +5,12 @@ authors = ["rroland"]
 edition = "2018"
 
 [lib]
-#crate-type = ["rlib", "staticlib"]
+crate-type = ["rlib", "staticlib"]
 
 [dependencies]
 plaidsys = { path = "../plaidsys" }
+compiler_builtins = { git = "https://github.com/rust-lang/compiler-builtins" }
 
-[dependencies.ralloc]
-path = "../../thirdparty/ralloc"
+[dependencies.spin]
+version = "0.7.0"
+features = []

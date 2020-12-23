@@ -9,6 +9,8 @@ edition = "2018"
 [dependencies]
 plaiduser = { path = "../plaiduser" }
 plaidsys = { path = "../plaidsys" }
+compiler_builtins = { git = "https://github.com/rust-lang/compiler-builtins" }
 
-[dependencies.ralloc]
-path = "../../thirdparty/ralloc"
+[dependencies.spin]
+version = "0.7.0"
+features = []

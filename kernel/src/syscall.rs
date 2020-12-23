@@ -53,7 +53,6 @@ pub unsafe fn do_syscall(mepc: usize, frame: *mut TrapFrame) {
             set_sleeping((*frame).pid as u16, (*frame).regs[Registers::A0 as usize]);
         }
         11 => {
-            println!("syscall {}", syscall_number);
             // execv
             // A0 = path
             // A1 = argv
@@ -182,7 +181,6 @@ pub unsafe fn do_syscall(mepc: usize, frame: *mut TrapFrame) {
             (*frame).regs[gp(Registers::A0)] = ret;
         }
         64 => {
-            println!("syscall write {}", syscall_number);
             // sys_write
             let fd = (*frame).regs[gp(Registers::A0)] as u16;
             let buf = (*frame).regs[gp(Registers::A1)] as *const u8;
@@ -249,7 +247,6 @@ pub unsafe fn do_syscall(mepc: usize, frame: *mut TrapFrame) {
             );
         }
         214 => {
-            println!("syscall brk {}", syscall_number);
             // brk
             // #define SYS_brk 214
             // void *brk(void *addr);
@@ -275,6 +272,7 @@ pub unsafe fn do_syscall(mepc: usize, frame: *mut TrapFrame) {
                 process.brk = addr;
             }
             (*frame).regs[gp(Registers::A0)] = process.brk;
+            // println!("Break move complete, new break 0x{:08x}", process.brk);
         }
         // System calls 1000 and above are "special" system calls for our OS. I'll
         // try to mimic the normal system calls below 1000 so that this OS is compatible

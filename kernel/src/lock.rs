@@ -7,6 +7,7 @@ use plaidsys::syscall::syscall_sleep;
 
 pub const DEFAULT_LOCK_SLEEP: usize = 10000;
 #[repr(u32)]
+#[derive(Debug)]
 pub enum MutexState {
     Unlocked = 0,
     Locked = 1,

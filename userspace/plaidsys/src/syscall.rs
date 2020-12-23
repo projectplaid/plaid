@@ -10,7 +10,7 @@ extern "C" {
     ) -> usize;
 }
 
-fn do_make_syscall(
+pub fn do_make_syscall(
     sysno: usize,
     arg0: usize,
     arg1: usize,
@@ -73,3 +73,5 @@ pub fn syscall_sbrk(addr: *const u8) -> *const u8 {
 pub fn syscall_write(fd: i32, addr: *const u8, size: usize) -> usize {
     do_make_syscall(64, fd as usize, addr as usize, size as usize, 0, 0, 0) as usize
 }
+
+pub fn syscall_breakpoint() {}
