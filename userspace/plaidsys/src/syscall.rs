@@ -1,3 +1,30 @@
+pub struct Send {}
+
+/// IPC Syscall definitions
+/// This follow a similar structure to seL4 (the gold standard in good microkernels)
+
+pub fn syscall_send() {}
+
+pub fn syscall_nonblocking_send() {}
+
+pub fn syscall_wait() {}
+
+pub fn syscall_nonblocking_wait() {}
+
+pub fn syscall_call() {}
+
+pub fn syscall_receive() {}
+
+pub fn syscall_reply() {}
+
+pub fn syscall_reply_receive() {}
+
+pub fn syscall_nonblocking_receive() {}
+
+pub fn syscall_yield() {
+    let _ = do_make_syscall(1, 0, 0, 0, 0, 0, 0);
+}
+
 extern "C" {
     fn make_syscall(
         sysno: usize,
@@ -20,10 +47,6 @@ pub fn do_make_syscall(
     arg5: usize,
 ) -> usize {
     unsafe { make_syscall(sysno, arg0, arg1, arg2, arg3, arg4, arg5) }
-}
-
-pub fn syscall_yield() {
-    let _ = do_make_syscall(1, 0, 0, 0, 0, 0, 0);
 }
 
 pub fn syscall_exit() {
