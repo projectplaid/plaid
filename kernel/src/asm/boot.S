@@ -14,7 +14,6 @@
 # Execution starts here.
 .global _start
 _start:
-
 	# Disable linker instruction relaxation for the `la` instruction below.
 	# This disallows the assembler from assuming that `gp` is already initialized.
 	# This causes the value stored in `gp` to be calculated from `pc`.
@@ -30,7 +29,7 @@ _start:
 	# Any hardware threads (hart) that are not bootstrapping
 	# need to wait for an IPI
 	csrr	t0, mhartid
-	bnez	t0, 3f
+	bnez	t0, 3f	
 
 	# Set all bytes in the BSS section to zero.
 	la 		a0, _bss_start

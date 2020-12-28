@@ -214,7 +214,7 @@ pub unsafe fn do_syscall(mepc: usize, frame: *mut TrapFrame) {
                     let descriptor = descriptor.unwrap();
                     match descriptor {
                         Descriptor::Framebuffer => {}
-                        Descriptor::File(inode) => {}
+                        Descriptor::File(_inode) => {}
                         _ => {
                             // unsupported
                             (*frame).regs[gp(Registers::A0)] = 0;

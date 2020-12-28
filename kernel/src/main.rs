@@ -15,6 +15,8 @@
     lang_items
 )]
 
+use core::ptr::read_volatile;
+
 // #[macro_use]
 extern crate alloc;
 // This is experimental and requires alloc_prelude as a feature
@@ -93,6 +95,26 @@ fn rust_switch_to_user(frame: usize) -> ! {
 #[no_mangle]
 extern "C" fn kinit() {
     uart::Uart::new(0x1000_0000).init();
+
+    // try and load the initrd
+    let mrom_base: usize = 0x1000;
+    unsafe {
+        // foo
+        let ptr = mrom_base as *mut u32;
+        let fdt_start = ptr.add(8);
+        println!("fdt start @ 0x{:08p} = 0x{:08x}", fdt_start, *fdt_start);
+        let fdt_header = fdt_start as *mut fdt::FdtHeader;
+        let result = fdt::check_fdt(fdt_header.as_ref().unwrap());
+        match result {
+            Ok(_) => {
+                println!("Valid FDT");
+            }
+            Err(e) => {
+                println!("Invalid FDT, reason = {:?}", e);
+            }
+        }
+    }
+
     page::init();
     kmem::init();
     process::init();
@@ -136,6 +158,7 @@ pub mod buffer;
 pub mod console;
 pub mod cpu;
 pub mod elf;
+pub mod fdt;
 pub mod fs;
 pub mod gpu;
 pub mod input;
