@@ -25,22 +25,24 @@ pub struct FdtHeaderError {
     error_type: FdtErrorType,
 }
 
+#[derive(Debug)]
 #[repr(C)]
 pub struct FdtHeader {
     magic: u32,
     total_size: u32,
-    offset_dt_struct: u32,
-    offset_mem_reservation_map: u32,
+    pub offset_dt_struct: u32,
+    pub offset_mem_reservation_map: u32,
     version: u32,
     last_comp_version: u32,
     size_dt_strings: u32,
     size_dt_struct: u32,
 }
 
+#[derive(Clone, Debug)]
 #[repr(C)]
 pub struct MemoryReservationEntry {
-    address: u64,
-    size: u64,
+    pub address: u64,
+    pub size: u64,
 }
 
 #[repr(u32)]
@@ -66,4 +68,17 @@ pub fn check_fdt(header: &FdtHeader) -> Result<(), FdtHeaderError> {
     }
 
     Ok(())
+}
+
+pub fn fetch_memory_reservation(location: usize) -> (Option<MemoryReservationEntry>, usize) {
+    unsafe {
+        let ptr = location as *mut u64;
+        let reservation = ptr as *const MemoryReservationEntry;
+
+        if (*reservation).address == 0 && (*reservation).size == 0 {
+            return (None, 0);
+        }
+
+        return (Some((*reservation).clone()), ptr.add(2) as usize);
+    }
 }

@@ -15,8 +15,6 @@
     lang_items
 )]
 
-use core::ptr::read_volatile;
-
 // #[macro_use]
 extern crate alloc;
 // This is experimental and requires alloc_prelude as a feature
@@ -108,6 +106,26 @@ extern "C" fn kinit() {
         match result {
             Ok(_) => {
                 println!("Valid FDT");
+
+                println!(
+                    "Looking for memory reservation at 0x{:08x}",
+                    u32::swap_bytes((*fdt_header).offset_mem_reservation_map) as usize
+                );
+
+                // find the reserved memory sections
+                let (reservation, next_location) = fdt::fetch_memory_reservation(
+                    fdt_start
+                        .add(u32::swap_bytes((*fdt_header).offset_mem_reservation_map) as usize)
+                        as usize,
+                );
+
+                if let Some(r) = reservation {
+                    println!("Reservation found: 0x{:08x} of size {}", r.address, r.size);
+                }
+
+                if next_location > 0 {
+                    println!("Next reservation at 0x{:08x}", next_location);
+                }
             }
             Err(e) => {
                 println!("Invalid FDT, reason = {:?}", e);
@@ -142,6 +160,7 @@ extern "C" fn kinit() {
     rust_switch_to_user(sched::schedule());
     // switch_to_user will not return, so we should never get here
 }
+
 #[no_mangle]
 extern "C" fn kinit_hart(_hartid: usize) {
     // We aren't going to do anything here until we get SMP going.
