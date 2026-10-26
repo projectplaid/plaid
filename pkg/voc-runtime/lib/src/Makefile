@@ -9,12 +9,18 @@ include $(PKGDIR)/../../mk/voc.mk
 VOC_RUNTIME	= $(VOC_ROOT)/src/runtime
 VOC_LIBRARY	= $(VOC_ROOT)/src/library
 
-# voc's runtime library (oberon.mk's runtime target) in import order;
-# Platform must precede Heap.
-VOC_NAMES	= PlatformNative Platform Heap Out Modules Reals Strings In \
-		  VT100 Files Math MathL Texts Oberon
-VOC_MODS	= $(VOC_RUNTIME)/PlatformNative$(VOC_PLATFORM).Mod \
-		  $(VOC_RUNTIME)/Platform$(VOC_PLATFORM).Mod \
+# The l4re Platform is Plaid's, kept here; other variants are voc's own.
+VOC_PLATFORM_DIR = $(if $(filter l4re,$(VOC_PLATFORM)),$(SRC_DIR),$(VOC_RUNTIME))
+
+# Plaid's kernel interface (L4, L4Re), ahead of Platform so Platform can
+# use it, then voc's runtime library (oberon.mk's runtime target), all in
+# import order; Platform must precede Heap.
+VOC_NAMES	= L4 L4Re PlatformNative Platform Heap Out Modules Reals \
+		  Strings In VT100 Files Math MathL Texts Oberon
+VOC_MODS	= $(SRC_DIR)/L4.Mod \
+		  $(SRC_DIR)/L4Re.Mod \
+		  $(VOC_PLATFORM_DIR)/PlatformNative$(VOC_PLATFORM).Mod \
+		  $(VOC_PLATFORM_DIR)/Platform$(VOC_PLATFORM).Mod \
 		  $(VOC_RUNTIME)/Heap.Mod \
 		  $(VOC_LIBRARY)/Out.Mod \
 		  $(VOC_RUNTIME)/Modules.Mod \

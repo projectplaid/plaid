@@ -30,13 +30,18 @@ L4Re. Change them here when they change, so they stay the reference.
   symbol files from an older system-wide voc.
 - voc changes live on the `plaid-patched` branch of
   `third_party/sources/voc` and are exported to `third_party/patches/voc`
-  (see `third_party/patches/README.md`).
+  (see `third_party/patches/README.md`). They are kept to general runtime
+  changes (the `VOC_L4RE` branch in `SYSTEM.c`/`SYSTEM.h`); anything
+  Plaid-specific lives in plaid instead.
 
 ## Platform variant
 
-- L4Re gets its own `src/runtime/Platforml4re.Mod` and
-  `PlatformNativel4re.Mod` from the start, rather than reusing
-  `Platformunix` with conditionals. The module is still named `Platform`
+- L4Re gets its own `Platforml4re.Mod` and `PlatformNativel4re.Mod`
+  from the start, rather than reusing `Platformunix` with conditionals.
+  They live in `pkg/voc-runtime/lib/src`, not in voc's tree: they are
+  Plaid's (Platform is the VFS client), and voc does not carry OS
+  bindings beyond what its own runtime needs. `VOC_PLATFORM=unix` still
+  builds voc's own `Platformunix`. The module is still named `Platform`
   and keeps Platformunix's full export list, stubs included, so library
   modules compile unchanged.
 - `Heap` calls `Platform_OSAllocate` by its C name, and may do so before
@@ -51,10 +56,11 @@ L4Re. Change them here when they change, so they stay the reference.
 
 ## Kernel interface
 
-`pkg/oberon-l4` lets Oberon programs use L4Re directly, so services can
-be written in Oberon. Module `L4` wraps the kernel (capabilities, IPC,
-IPC gates); `L4Re` wraps the environment (named capabilities, capability
-slots, dataspaces). A server module (registry, dispatch loop, sessions)
+Modules `L4` and `L4Re` let Oberon programs use L4Re directly, so
+services can be written in Oberon. `L4` wraps the kernel (capabilities,
+IPC, IPC gates); `L4Re` wraps the environment (named capabilities,
+capability slots, dataspaces). Both are Plaid's, built as part of
+`pkg/voc-runtime`. A server module (registry, dispatch loop, sessions)
 comes next. `apps/l4-echo` is the reference test: an echo server and
 client connected by ned, passing strings and a dataspace capability.
 
@@ -71,14 +77,15 @@ client connected by ned, passing strings and a dataspace capability.
   server must also keep a reference to the object: the kernel's copy is
   invisible to the GC. voc's heap never moves objects.
 - Servers are single-threaded: voc's runtime and GC are not thread-safe.
-- Platform does not import these modules; it must start before Heap and
-  stays self-contained.
+- `L4` and `L4Re` are translated ahead of Platform, so Platform can
+  import them for its VFS calls: they import only `SYSTEM` (and `L4`),
+  and their bodies do not allocate.
 
 ## Files and the VFS
 
 Plaid's userspace does not use musl's POSIX file API. Files go through
 Plaid's own VFS, an IPC protocol over L4Re capabilities. The VFS server
-is written in Oberon, on `pkg/oberon-l4`.
+is written in Oberon, on `L4`/`L4Re`.
 
 - `FileHandle` stays `LONGINT`. `StdIn`/`StdOut`/`StdErr` stay the
   constants 0/1/2 and map to the log/vcon capability, not the VFS; file
@@ -111,10 +118,9 @@ session; an unknown id is `EBADF`.
 ### Protocol (planned)
 
 The protocol's constants are shared by the server and Platforml4re, the
-client. With the server in Oberon they belong in an Oberon module rather
-than a C header. Platform cannot import `oberon-l4`, which is built after
-the runtime, so how Platforml4re does its IPC (its own few calls, or `L4`
-moved into the runtime ahead of Platform) is still open.
+client. With both in Oberon they belong in an Oberon module rather than
+a C header, built in `pkg/voc-runtime` ahead of Platform; Platform does
+its IPC through `L4`.
 
 - msgtag label = protocol ID (around `0x5000`, clear of the kernel's
   values at or below 0 and L4Re's `0x4000` range); MR0 = opcode.
