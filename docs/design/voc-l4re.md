@@ -85,7 +85,11 @@ C++ server and Platforml4re:
 
 - `apps/hello` (Oberon-2 hello world) builds and runs on L4Re with
   `VOC_PLATFORM=unix`; the Unix runtime links against L4Re's musl as is.
-- `Platforml4re.Mod` and `PlatformNativel4re.Mod` are, for now, copies
-  of the Unix versions. Next milestone: hello running with
-  `VOC_PLATFORM=l4re` and console output going straight to the log
-  capability.
+- `Platforml4re.Mod` runs hello with `VOC_PLATFORM=l4re`: console output
+  goes to the L4Re log capability, `Time` reads the KIP clock and `Delay`
+  sleeps with an IPC timeout. Memory and `getenv`/`exit` still come from
+  musl. Lookups (open, stat, unlink, rename, chdir) fail with `ENOENT`,
+  creation with `ENOSYS`, terminal control with `ENOTTY`; there is no
+  wall clock yet. `PlatformNativel4re.Mod` is empty.
+- Next: the `VOC_L4RE` branch in `SYSTEM.c`/`SYSTEM.h`, which still
+  compiles in the Unix signal and command-recovery code.
