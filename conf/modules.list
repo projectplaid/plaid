@@ -1,0 +1,14 @@
+# vim:set ft=l4mods:
+# Plaid boot entries. Use with the L4Re build's image and qemu targets:
+#
+#   make -C $L4RE_OBJDIR qemu E=<entry> MODULES_LIST=$PWD/conf/modules.list \
+#        MODULE_SEARCH_PATH=$KERNEL_OBJDIR
+#
+# kernel, sigma0 and moe are always loaded automatically; see
+# third_party/sources/l4/conf/modules.list for the full syntax.
+
+# apps/hello: Oberon-2 hello world, started directly by moe.
+entry oberon-hello
+roottask moe --init=rom/oberon-hello
+module l4re
+module oberon-hello
