@@ -9,9 +9,14 @@ L4Re. Change them here when they change, so they stay the reference.
   Linux host with `PLATFORM=unix`; only the runtime and library modules
   are translated for L4Re. There is no `bootstrap/l4re-*`.
 - voc emits C on the host (`voc -S`), and BID compiles that C for L4Re.
-  `apps/hello` is the reference package: its Makefile translates the
-  runtime into the object dir and selects the Platform variant with
-  `VOC_PLATFORM` (`unix` or `l4re`).
+  `pkg/voc-runtime` translates voc's runtime library once into
+  `libvoc-runtime.a` and installs its headers and symbol files under
+  `$(OBJ_BASE)/lib/<system>/voc`. Programs include `mk/voc-prog.mk`,
+  name their modules (`VOC_MAIN`, `VOC_MODULES`) and are translated
+  against those symbol files (see `apps/hello`). `VOC_PLATFORM` (`l4re`
+  by default, or `unix`) selects the Platform variant; a program refuses
+  to build against a runtime built for the other one. The top-level
+  `make` builds the packages in dependency order.
 - The in-tree voc build (`$VOC_ROOT/install`, see `.envrc`) is the one
   to use. Its install dir is baked into the compiler, so it never reads
   symbol files from an older system-wide voc.
