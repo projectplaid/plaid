@@ -7,7 +7,12 @@ TARGET		= oberon-hello
 VOC		?= $(VOC_ROOT)/install/bin/voc
 VOC_RUNTIME	= $(VOC_ROOT)/src/runtime
 VOC_LIBRARY	= $(VOC_ROOT)/src/library
-VOC_PLATFORM	?= unix
+VOC_PLATFORM	?= l4re
+
+# The runtime C must agree with the Platform variant it is built with.
+ifeq ($(VOC_PLATFORM),l4re)
+DEFINES		+= -DVOC_L4RE
+endif
 
 # Runtime modules in import order; Platform must precede Heap.
 VOC_MODS	= $(VOC_RUNTIME)/PlatformNative$(VOC_PLATFORM).Mod \

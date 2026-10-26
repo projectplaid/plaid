@@ -91,5 +91,9 @@ C++ server and Platforml4re:
   musl. Lookups (open, stat, unlink, rename, chdir) fail with `ENOENT`,
   creation with `ENOSYS`, terminal control with `ENOTTY`; there is no
   wall clock yet. `PlatformNativel4re.Mod` is empty.
-- Next: the `VOC_L4RE` branch in `SYSTEM.c`/`SYSTEM.h`, which still
-  compiles in the Unix signal and command-recovery code.
+- `SYSTEM.c`/`SYSTEM.h` have a `VOC_L4RE` branch: no signal handling,
+  and command recovery reduces to running the command (generated code
+  still calls `SYSTEM_CommandCritical`/`SYSTEM_CheckCommandInterrupt`, so
+  they remain as no-ops). `apps/hello` defaults to `VOC_PLATFORM=l4re`
+  and defines `VOC_L4RE` exactly when that platform is selected. The
+  runtime's only libc uses are now malloc, free, getenv and exit.

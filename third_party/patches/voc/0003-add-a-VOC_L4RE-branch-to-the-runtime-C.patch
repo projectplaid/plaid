@@ -1,0 +1,98 @@
+From c7316fbb738b2b6c62d3df5323fa7a0aeac276e2 Mon Sep 17 00:00:00 2001
+From: Robert Roland <rob@retronauts.org>
+Date: Sun, 25 Oct 2026 19:30:50 -0700
+Subject: [PATCH 3/3] add a VOC_L4RE branch to the runtime C
+
+L4Re delivers no signals, so with VOC_L4RE defined SYSTEM.c leaves out
+signal.h, sigaction-based handlers and the sigsetjmp command recovery.
+SYSTEM_RunCommand just runs the command; the critical-section and
+interrupt-check entry points generated code calls remain as no-ops, and
+SYSTEM_ModuleCallback reports no handlers. SYSTEM.h drops the
+SystemSetHandler declaration and the segfault handler setup in __INIT.
+
+Unix and Windows builds are unchanged.
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ src/runtime/SYSTEM.c | 25 +++++++++++++++++++++++--
+ src/runtime/SYSTEM.h |  6 ++++--
+ 2 files changed, 27 insertions(+), 4 deletions(-)
+
+diff --git a/src/runtime/SYSTEM.c b/src/runtime/SYSTEM.c
+index 9a58e616..b764dbab 100644
+--- a/src/runtime/SYSTEM.c
++++ b/src/runtime/SYSTEM.c
+@@ -20,7 +20,9 @@
+ #endif
+ #include "SYSTEM.h"
+ #include "stdarg.h"
++#ifndef VOC_L4RE
+ #include <signal.h>
++#endif
+ 
+ /* Compiler-maintained native stack frames and POSIX command recovery.
+    The setjmp frame must remain live until the command returns; cleanup is
+@@ -47,7 +49,19 @@ BOOLEAN SYSTEM_ModuleActive(void *owner)
+     return 0;
+ }
+ 
+-#ifndef _WIN32
++#if defined(VOC_L4RE)
++/* L4Re delivers no signals, so commands run to completion and there is
++   nothing to defer. */
++void SYSTEM_CommandCritical(BOOLEAN enter) { (void)enter; }
++void SYSTEM_CheckCommandInterrupt(void) {}
++void SYSTEM_StopCommandRecovery(void) {}
++INT32 SYSTEM_RunCommand(void (*command)(void))
++{
++    if (!command) return -22;  /* -EINVAL, as Platform's ErrorCodes */
++    command();
++    return 0;
++}
++#elif !defined(_WIN32)
+ #include <errno.h>
+ #include <setjmp.h>
+ #include <stddef.h>
+@@ -270,7 +284,14 @@ SYSTEM_PTR SYSTEM_NEWARR(ADDRESS *typ, ADDRESS elemsz, int elemalgn, int nofdim,
+ 
+ typedef void (*SystemSignalHandler)(INT32); // = Platform_SignalHandler
+ 
+-#ifndef _WIN32
++#if defined(VOC_L4RE)
++    // No signals on L4Re, so no handler can keep a module loaded.
++    ADDRESS SYSTEM_ModuleCallback(INT32 index) {
++        (void)index;
++        return 0;
++    }
++
++#elif !defined(_WIN32)
+     // Unix signal handling
+     SystemSignalHandler handler[10] = {0};  // Adjust the array size to include signal 11
+ 
+diff --git a/src/runtime/SYSTEM.h b/src/runtime/SYSTEM.h
+index 001e6ee5..406689e7 100644
+--- a/src/runtime/SYSTEM.h
++++ b/src/runtime/SYSTEM.h
+@@ -145,7 +145,9 @@ static inline INT64 __RF(UINT64 i, UINT64 ub) {if (i >= ub) {__HALT(-8);} return
+ 
+ // Signal handling in SYSTEM.c
+ 
+-#ifndef _WIN32
++#if defined(VOC_L4RE)
++  // No signals on L4Re.
++#elif !defined(_WIN32)
+   extern void SystemSetHandler(int s, ADDRESS h);
+ #else
+   extern void SystemSetInterruptHandler(ADDRESS h);
+@@ -315,7 +317,7 @@ extern void Modules_Init(INT32 argc, ADDRESS argv);
+ extern void Heap_FINALL(void);
+ 
+ extern void setupAutomaticSegfaultHandler(void);
+-#ifndef _WIN32
++#if !defined(_WIN32) && !defined(VOC_L4RE)
+ #define __INIT(argc, argv)    static void *m; setupAutomaticSegfaultHandler(); Modules_Init(argc, (ADDRESS)&argv);
+ #else
+ #define __INIT(argc, argv)    static void *m; Modules_Init(argc, (ADDRESS)&argv);
+-- 
+2.56.0
+
