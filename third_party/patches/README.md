@@ -10,6 +10,14 @@ filename order:
       l4re-core/0001-....patch
       voc/0001-....patch
 
-To generate, from inside the project's checkout under `third_party/sources/`:
+`bootstrap.sh` applies them with `git am` onto a local `plaid-patched` branch
+in each project, after `ham sync`. Before syncing it switches that project
+back to the ref ham manages, and stops instead if the branch has
+uncommitted changes or commits not exported here.
 
-    git format-patch -o <repo>/third_party/patches/<project> <upstream-rev>..HEAD
+To change a project's patches, commit on `plaid-patched` and re-export:
+
+    cd third_party/sources/<path>
+    rm -f <repo>/third_party/patches/<project>/*.patch
+    git format-patch -o <repo>/third_party/patches/<project> \
+        "$(git config branch.plaid-patched.plaidBase)"..HEAD
