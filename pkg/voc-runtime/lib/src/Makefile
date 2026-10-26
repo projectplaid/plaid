@@ -30,7 +30,7 @@ VOC_MODS	= $(VOC_RUNTIME)/PlatformNative$(VOC_PLATFORM).Mod \
 
 SRC_C		= $(VOC_NAMES:%=%.c) SYSTEM.c
 PRIVATE_INCDIR	= . $(VOC_RUNTIME)
-REQUIRES_LIBS	= libm
+REQUIRES_LIBS	= libm l4re_c l4re_c-util
 DEL_ON_CLEAN	= $(foreach m,$(VOC_NAMES),$m.c $m.h $m.sym) \
 		  voc-runtime.stamp voc-platform
 

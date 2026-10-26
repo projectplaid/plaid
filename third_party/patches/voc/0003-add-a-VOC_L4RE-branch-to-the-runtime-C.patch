@@ -1,7 +1,7 @@
 From c7316fbb738b2b6c62d3df5323fa7a0aeac276e2 Mon Sep 17 00:00:00 2001
 From: Robert Roland <rob@retronauts.org>
 Date: Sun, 25 Oct 2026 19:30:50 -0700
-Subject: [PATCH 3/3] add a VOC_L4RE branch to the runtime C
+Subject: [PATCH 3/4] add a VOC_L4RE branch to the runtime C
 
 L4Re delivers no signals, so with VOC_L4RE defined SYSTEM.c leaves out
 signal.h, sigaction-based handlers and the sigsetjmp command recovery.

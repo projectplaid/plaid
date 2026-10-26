@@ -1,7 +1,7 @@
 From a0e665117c128aefe47cd6f48eed1f5a8389d62c Mon Sep 17 00:00:00 2001
 From: Robert Roland <rob@retronauts.org>
 Date: Sun, 25 Oct 2026 18:42:33 -0700
-Subject: [PATCH 1/3] add l4re Platform variants, copied from unix
+Subject: [PATCH 1/4] add l4re Platform variants, copied from unix
 
 Starting point for the L4Re/Fiasco port: Platforml4re.Mod and
 PlatformNativel4re.Mod are verbatim copies of the unix variants, to be

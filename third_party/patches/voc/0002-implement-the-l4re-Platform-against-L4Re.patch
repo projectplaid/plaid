@@ -1,7 +1,7 @@
 From 612aba6db9678394d0c2eb4d95a5cbf750f1a6d7 Mon Sep 17 00:00:00 2001
 From: Robert Roland <rob@retronauts.org>
 Date: Sun, 25 Oct 2026 19:25:01 -0700
-Subject: [PATCH 2/3] implement the l4re Platform against L4Re
+Subject: [PATCH 2/4] implement the l4re Platform against L4Re
 
 Console output on handles 1-2 goes to the L4Re log capability, Time
 reads the KIP clock and Delay sleeps with an IPC timeout. Memory,

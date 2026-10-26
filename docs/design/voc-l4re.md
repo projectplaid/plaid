@@ -92,13 +92,14 @@ C++ server and Platforml4re:
   `VOC_PLATFORM=unix`; the Unix runtime links against L4Re's musl as is.
 - `Platforml4re.Mod` runs hello with `VOC_PLATFORM=l4re`: console output
   goes to the L4Re log capability, `Time` reads the KIP clock and `Delay`
-  sleeps with an IPC timeout. Memory and `getenv`/`exit` still come from
-  musl. Lookups (open, stat, unlink, rename, chdir) fail with `ENOENT`,
+  sleeps with an IPC timeout. `OSAllocate` gives each heap chunk its own
+  dataspace from the L4Re memory allocator, attached anywhere and rounded
+  up to pages; `OSFree` detaches it and drops the capability, which frees
+  the memory. Only `getenv` and `exit` still come from musl. Lookups (open, stat, unlink, rename, chdir) fail with `ENOENT`,
   creation with `ENOSYS`, terminal control with `ENOTTY`; there is no
   wall clock yet. `PlatformNativel4re.Mod` is empty.
 - `SYSTEM.c`/`SYSTEM.h` have a `VOC_L4RE` branch: no signal handling,
   and command recovery reduces to running the command (generated code
   still calls `SYSTEM_CommandCritical`/`SYSTEM_CheckCommandInterrupt`, so
   they remain as no-ops). `apps/hello` defaults to `VOC_PLATFORM=l4re`
-  and defines `VOC_L4RE` exactly when that platform is selected. The
-  runtime's only libc uses are now malloc, free, getenv and exit.
+  and defines `VOC_L4RE` exactly when that platform is selected.
