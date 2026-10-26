@@ -1,0 +1,2 @@
+provides: oberon-l4
+requires: stdlibs voc-runtime

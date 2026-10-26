@@ -17,6 +17,14 @@ L4Re. Change them here when they change, so they stay the reference.
   by default, or `unix`) selects the Platform variant; a program refuses
   to build against a runtime built for the other one. The top-level
   `make` builds the packages in dependency order.
+- Oberon libraries include `mk/voc-lib.mk` (`VOC_LIB`, `VOC_MODULES`)
+  and install into the same export dir; packages that import them name
+  them in `VOC_LIBS`. Translation runs with `OBERON=".;<export dir>"`, so
+  a package's own symbol files win over installed ones, and with `-F` so
+  voc always writes them.
+- In code procedures (`PROCEDURE -name(...) "C"`) wrap every parameter
+  in parentheses: voc emits them as C macros without parenthesizing the
+  arguments, so `(size_t)n * 8` called with `a + b` computes `a + b*8`.
 - The in-tree voc build (`$VOC_ROOT/install`, see `.envrc`) is the one
   to use. Its install dir is baked into the compiler, so it never reads
   symbol files from an older system-wide voc.
@@ -41,10 +49,36 @@ L4Re. Change them here when they change, so they stay the reference.
 - Error codes keep Platformunix's `ErrorCode` names and Linux values, as
   literals rather than `errno.h` macros.
 
+## Kernel interface
+
+`pkg/oberon-l4` lets Oberon programs use L4Re directly, so services can
+be written in Oberon. Module `L4` wraps the kernel (capabilities, IPC,
+IPC gates); `L4Re` wraps the environment (named capabilities, capability
+slots, dataspaces). A server module (registry, dispatch loop, sessions)
+comes next. `apps/l4-echo` is the reference test: an echo server and
+client connected by ned, passing strings and a dataspace capability.
+
+- An `L4.Message` holds what goes into or out of the message registers.
+  Every IPC procedure loads the UTCB from it and copies the result back
+  in one step: anything else that does IPC (`Out`, or `NEW` growing the
+  heap) reuses the same registers, so callers never touch the UTCB.
+- Capability indexes and words are `SYSTEM.ADDRESS`: under `-O2`,
+  `LONGINT` is only 32 bits.
+- `Call` returns a negative IPC error or the reply's label (0 or a
+  negative error); `L4.IsIpcError` tells the two apart.
+- A gate's label must keep its low two bits zero; the kernel ORs the
+  sender's rights into them. When the label is an object's address, the
+  server must also keep a reference to the object: the kernel's copy is
+  invisible to the GC. voc's heap never moves objects.
+- Servers are single-threaded: voc's runtime and GC are not thread-safe.
+- Platform does not import these modules; it must start before Heap and
+  stays self-contained.
+
 ## Files and the VFS
 
 Plaid's userspace does not use musl's POSIX file API. Files go through
-Plaid's own VFS, an IPC protocol over L4Re capabilities.
+Plaid's own VFS, an IPC protocol over L4Re capabilities. The VFS server
+is written in Oberon, on `pkg/oberon-l4`.
 
 - `FileHandle` stays `LONGINT`. `StdIn`/`StdOut`/`StdErr` stay the
   constants 0/1/2 and map to the log/vcon capability, not the VFS; file
@@ -74,10 +108,13 @@ See `l4/pkg/l4re-core/moe/server/src/alloc.cc` (`register_ipc_object`)
 and `obj_reg.h` (`handle_irq`). File and directory ids are scoped to a
 session; an unknown id is `EBADF`.
 
-### Protocol header (planned)
+### Protocol (planned)
 
-`pkg/plaid-vfs/include/vfs_proto.h`, shared by the C client shim, the
-C++ server and Platforml4re:
+The protocol's constants are shared by the server and Platforml4re, the
+client. With the server in Oberon they belong in an Oberon module rather
+than a C header. Platform cannot import `oberon-l4`, which is built after
+the runtime, so how Platforml4re does its IPC (its own few calls, or `L4`
+moved into the runtime ahead of Platform) is still open.
 
 - msgtag label = protocol ID (around `0x5000`, clear of the kernel's
   values at or below 0 and L4Re's `0x4000` range); MR0 = opcode.
@@ -95,7 +132,8 @@ C++ server and Platforml4re:
   sleeps with an IPC timeout. `OSAllocate` gives each heap chunk its own
   dataspace from the L4Re memory allocator, attached anywhere and rounded
   up to pages; `OSFree` detaches it and drops the capability, which frees
-  the memory. Only `getenv` and `exit` still come from musl. Lookups (open, stat, unlink, rename, chdir) fail with `ENOENT`,
+  the memory. Only `getenv` and `exit` still come from musl. Lookups
+  (open, stat, unlink, rename, chdir) fail with `ENOENT`,
   creation with `ENOSYS`, terminal control with `ENOTTY`; there is no
   wall clock yet. `PlatformNativel4re.Mod` is empty.
 - `SYSTEM.c`/`SYSTEM.h` have a `VOC_L4RE` branch: no signal handling,

@@ -2,7 +2,9 @@
 # Plaid boot entries. Use with the L4Re build's image and qemu targets:
 #
 #   make -C $L4RE_OBJDIR qemu E=<entry> MODULES_LIST=$PWD/conf/modules.list \
-#        MODULE_SEARCH_PATH=$KERNEL_OBJDIR
+#        MODULE_SEARCH_PATH=$KERNEL_OBJDIR:$PWD/conf
+#
+# conf/ is on the search path for the entries' ned scripts (*.cfg).
 #
 # kernel, sigma0 and moe are always loaded automatically; see
 # third_party/sources/l4/conf/modules.list for the full syntax.
@@ -12,3 +14,12 @@ entry oberon-hello
 roottask moe --init=rom/oberon-hello
 module l4re
 module oberon-hello
+
+# apps/l4-echo: Oberon echo server and client over an IPC gate, via ned.
+entry oberon-l4-echo
+roottask moe rom/l4-echo.cfg
+module l4re
+module ned
+module l4-echo.cfg
+module oberon-echo-server
+module oberon-echo-client

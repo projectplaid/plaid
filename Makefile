@@ -5,7 +5,9 @@
 O	?= $(L4RE_OBJDIR)
 
 PKGS	= pkg/voc-runtime \
-	  apps/hello
+	  pkg/oberon-l4 \
+	  apps/hello \
+	  apps/l4-echo
 
 all clean:
 	@for p in $(PKGS); do $(MAKE) -C $$p O=$(O) $@ || exit; done
