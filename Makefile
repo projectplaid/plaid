@@ -5,6 +5,7 @@
 O	?= $(L4RE_OBJDIR)
 
 PKGS	= pkg/voc-runtime \
+	  pkg/l4-server \
 	  apps/hello \
 	  apps/l4-echo
 

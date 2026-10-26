@@ -60,9 +60,11 @@ Modules `L4` and `L4Re` let Oberon programs use L4Re directly, so
 services can be written in Oberon. `L4` wraps the kernel (capabilities,
 IPC, IPC gates); `L4Re` wraps the environment (named capabilities,
 capability slots, dataspaces). Both are Plaid's, built as part of
-`pkg/voc-runtime`. A server module (registry, dispatch loop, sessions)
-comes next. `apps/l4-echo` is the reference test: an echo server and
-client connected by ned, passing strings and a dataspace capability.
+`pkg/voc-runtime`. Module `L4Server` (`pkg/l4-server`, an Oberon
+library) serves objects over IPC gates. `apps/l4-echo` is the reference
+test: an echo server whose gate is a factory, and a client that uses a
+session ned created for it and one it creates and drops itself, passing
+strings and dataspace capabilities both ways.
 
 - An `L4.Message` holds what goes into or out of the message registers.
   Every IPC procedure loads the UTCB from it and copies the result back
@@ -77,6 +79,17 @@ client connected by ned, passing strings and a dataspace capability.
   server must also keep a reference to the object: the kernel's copy is
   invisible to the GC. voc's heap never moves objects.
 - Servers are single-threaded: voc's runtime and GC are not thread-safe.
+- `L4Server.Object` is extended per service and overrides `Dispatch`,
+  which turns the request in an `L4.Message` into its reply in place.
+  `Register` serves an object on an existing gate (from ned), `Create` on
+  a new one, `CreateSession` on one only clients keep alive; `Run` is the
+  loop. A gate's label is the object's address, so a request goes straight
+  to its `Dispatch`; the registry keeps every registered object alive.
+- A capability sent with a request lands in a receive slot the loop keeps
+  ready; `Dispatch` keeps it with `TakeCap`, otherwise the loop drops it.
+- `L4Server.Factory` serves the L4 factory protocol (`L4.ProtoFactory`,
+  type in `mr[0]`, ned's `:create()`): it makes a session with
+  `NewSession` and replies with the session's gate.
 - `L4` and `L4Re` are translated ahead of Platform, so Platform can
   import them for its VFS calls: they import only `SYSTEM` (and `L4`),
   and their bodies do not allocate.
@@ -103,13 +116,14 @@ is written in Oberon, on `L4`/`L4Re`.
 ### Sessions
 
 Each client's `vfs` capability is its own session gate, created through
-the `L4::Factory` protocol (ned's `:create()`), as moe does it:
+the L4 factory protocol (ned's `:create()`), as moe does it. `L4Server`
+implements this (`Factory`, `CreateSession`):
 
 - the server drops its own reference to each session gate
-  (`dec_refcnt(1)`) so only the client keeps it alive;
+  (`L4.DecRefcnt(gate, 1)`) so only clients keep it alive;
 - it registers a deletion IRQ on its thread and, when it fires, checks
-  every session with `validate()` and tears down dead ones (closing files
-  and unmapping dataspaces).
+  every session with `L4.Exists` and calls `Closed` on dead ones, which
+  for the VFS closes their files and unmaps their dataspaces.
 
 See `l4/pkg/l4re-core/moe/server/src/alloc.cc` (`register_ipc_object`)
 and `obj_reg.h` (`handle_irq`). File and directory ids are scoped to a

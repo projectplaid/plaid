@@ -1,1 +1,1 @@
-requires: stdlibs voc-runtime
+requires: stdlibs voc-runtime l4-server

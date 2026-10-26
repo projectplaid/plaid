@@ -1,0 +1,2 @@
+provides: l4-server
+requires: stdlibs voc-runtime

@@ -30,6 +30,9 @@ CONST
   IpcErrorBase* = 2000;
   IpcErrorLast* = 2000 + 1FH;
 
+  (* Message labels of kernel protocols, as L4_PROTO_FACTORY etc. *)
+  ProtoFactory* = -15;
+
 TYPE
   Cap*     = SYSTEM.ADDRESS;  (* l4_cap_idx_t *)
   Word*    = SYSTEM.ADDRESS;  (* l4_umword_t *)
@@ -51,9 +54,12 @@ VAR
 PROCEDURE -Aincl1 '#include <l4/sys/consts.h>';
 PROCEDURE -Aincl2 '#include <l4/sys/factory.h>';
 PROCEDURE -Aincl3 '#include <l4/sys/ipc.h>';
-PROCEDURE -Aincl4 '#include <l4/sys/rcv_endpoint.h>';
-PROCEDURE -Aincl5 '#include <l4/sys/types.h>';
-PROCEDURE -Aincl6 '#include <l4/sys/utcb.h>';
+PROCEDURE -Aincl4 '#include <l4/sys/kernel_object.h>';
+PROCEDURE -Aincl5 '#include <l4/sys/rcv_endpoint.h>';
+PROCEDURE -Aincl6 '#include <l4/sys/task.h>';
+PROCEDURE -Aincl7 '#include <l4/sys/thread.h>';
+PROCEDURE -Aincl8 '#include <l4/sys/types.h>';
+PROCEDURE -Aincl9 '#include <l4/sys/utcb.h>';
 
 
 
@@ -260,6 +266,44 @@ END CreateGate;
 PROCEDURE BindThread*(gate, thread: Cap; label: Word): LONGINT;
 BEGIN RETURN l4error(bindthread(gate, thread, label))
 END BindThread;
+
+
+
+
+(* Kernel objects. Results are 0 or a negative L4 error. *)
+
+PROCEDURE -createirq(factory, irq: Cap): Word
+"(ADDRESS)l4_factory_create_irq((l4_cap_idx_t)(factory), (l4_cap_idx_t)(irq)).raw";
+PROCEDURE -registerdelirq(thread, irq: Cap): Word
+"(ADDRESS)l4_thread_register_del_irq((l4_cap_idx_t)(thread), (l4_cap_idx_t)(irq)).raw";
+PROCEDURE -decrefcnt(cap: Cap; n: LONGINT): Word
+"(ADDRESS)l4_kobject_dec_refcnt((l4_cap_idx_t)(cap), (l4_mword_t)(n)).raw";
+PROCEDURE -capexists(cap: Cap): BOOLEAN
+"(l4_msgtag_label(l4_task_cap_valid(L4_BASE_TASK_CAP, (l4_cap_idx_t)(cap))) > 0)";
+
+(* Creates an IRQ object in the free slot irq. Bind it to a thread with
+   BindThread to receive its triggers there. *)
+PROCEDURE CreateIrq*(factory, irq: Cap): LONGINT;
+BEGIN RETURN l4error(createirq(factory, irq))
+END CreateIrq;
+
+(* Has irq triggered whenever an IPC gate bound to thread is deleted. The
+   trigger does not say which gate. *)
+PROCEDURE RegisterDeletionIrq*(thread, irq: Cap): LONGINT;
+BEGIN RETURN l4error(registerdelirq(thread, irq))
+END RegisterDeletionIrq;
+
+(* Stops n of this task's references to the object in cap counting toward
+   keeping it alive, so it is deleted once the others are gone. *)
+PROCEDURE DecRefcnt*(cap: Cap; n: LONGINT): LONGINT;
+BEGIN RETURN l4error(decrefcnt(cap, n))
+END DecRefcnt;
+
+(* Whether cap still refers to an object; FALSE once the object has been
+   deleted. *)
+PROCEDURE Exists*(cap: Cap): BOOLEAN;
+BEGIN RETURN capexists(cap)
+END Exists;
 
 
 BEGIN
