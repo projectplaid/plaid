@@ -1,0 +1,5 @@
+# ham workspace: state and all vendored checkouts
+/third_party/sources/
+
+# Build output
+/build/

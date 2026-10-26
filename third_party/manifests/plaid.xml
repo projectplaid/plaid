@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ham overlay for plaid, applied on top of the upstream L4Re manifest
+  (https://github.com/kernkonzept/manifest, default.xml).
+
+  The ham workspace root is third_party/sources, so all paths below are
+  relative to it. bootstrap.sh links this file into
+  third_party/sources/.ham/local_manifests/, so edits here take effect on the
+  next `ham sync` without committing first.
+
+  ham supports <remote>, <project>, <default>, and <extend-|remove-> variants
+  of project/remote here; <include>, <linkfile> and <copyfile> are rejected.
+  Redefining an upstream project by name is an error: use <extend-project>
+  (e.g. to pin a revision) or <remove-project> followed by <project>.
+-->
+<manifest>
+  <remote name="vishaps" fetch="https://github.com/vishaps" />
+
+  <project name="voc" remote="vishaps" path="voc" revision="master" />
+
+  <!-- Example: pin an upstream L4Re component.
+  <extend-project name="fiasco" revision="<sha>" />
+  -->
+</manifest>
