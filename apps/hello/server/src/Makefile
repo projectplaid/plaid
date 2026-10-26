@@ -20,7 +20,7 @@ VOC_GEN_C	= PlatformNative.c Platform.c Heap.c Out.c Modules.c
 SRC_C		= Hello.c $(VOC_GEN_C) SYSTEM.c
 PRIVATE_INCDIR	= . $(VOC_RUNTIME)
 DEL_ON_CLEAN	= Hello.c Hello.h $(VOC_GEN_C) $(VOC_GEN_C:.c=.h) *.sym \
-		  voc-runtime.stamp
+		  voc-runtime.stamp voc-platform
 
 # voc's generated C trips most of WARNINGS_FULL.
 WARNINGS	= $(WARNINGS_MINIMAL)
@@ -29,9 +29,17 @@ vpath SYSTEM.c $(VOC_RUNTIME)
 
 include $(L4DIR)/mk/prog.mk
 
+# Every platform generates the same file names here, so record which one
+# was last translated; it only changes when VOC_PLATFORM does.
+voc-platform: FORCE
+	$(VERBOSE)echo $(VOC_PLATFORM) > $@.tmp
+	$(VERBOSE)cmp -s $@.tmp $@ && rm -f $@.tmp || mv $@.tmp $@
+
+FORCE: ;
+
 # Translate the runtime into this object dir so Hello is checked against
 # these symbol files rather than the installed ones.
-voc-runtime.stamp: $(VOC_MODS)
+voc-runtime.stamp: $(VOC_MODS) voc-platform
 	$(VERBOSE)$(VOC) -SFs -O2 $(VOC_MODS)
 	$(VERBOSE)touch $@
 
